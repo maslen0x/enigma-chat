@@ -7,6 +7,6 @@
 <style module>
 div.container {
   max-width: 600px;
-  height: 100vh;
+  height: 100%;
 }
 </style>

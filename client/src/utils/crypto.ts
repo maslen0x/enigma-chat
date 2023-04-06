@@ -1,87 +1,36 @@
 import { alphabet, size } from '@/constants/alphabet';
 
 export const encrypt = (message: string, initialRotors: readonly [number, number, number]) => {
-  let first = initialRotors[0];
-  let second = initialRotors[1];
-  let third = initialRotors[2];
-
-  return message
-    .toLowerCase()
-    .split('')
-    .reduce((acc, letter) => {
-      const index = alphabet.split('').findIndex((x) => x === letter);
-      if (index === -1) {
-        acc += letter;
-        return acc;
-      }
-
-      first++;
-
-      if (first >= size) {
-        first = 0;
-        second++;
-      }
-
-      if (second >= size) {
-        second = 0;
-        third++;
-      }
-
-      if (third >= size) {
-        third = 0;
-        first++;
-      }
-
-      const sum = (index + first + second + third) % size;
-      acc += alphabet[sum];
-      return acc;
-    }, '');
+  const sum = initialRotors.reduce((acc, rotor) => acc + rotor, 0);
+  const letters = message.toLowerCase().split('');
+  return letters.reduce((acc, letter) => {
+    if (!alphabet.split('').includes(letter)) {
+      acc += letter;
+    } else {
+      const letterIndex = alphabet.split('').findIndex((x) => x === letter);
+      acc += alphabet[(letterIndex + sum) % size];
+    }
+    return acc;
+  }, '');
 };
 
 export const decrypt = (message: string, initialRotors: readonly [number, number, number]) => {
-  let first = initialRotors[0];
-  let second = initialRotors[1];
-  let third = initialRotors[2];
+  const sum = initialRotors.reduce((acc, rotor) => acc + rotor, 0);
+  const letters = message.toLowerCase().split('');
+  return letters.reduce((acc, letter) => {
+    if (!alphabet.split('').includes(letter)) {
+      acc += letter;
+    } else {
+      const letterIndex = alphabet.split('').findIndex((x) => x === letter);
+      const index = round(letterIndex - sum, 2);
+      acc += alphabet[Math.abs(index)];
+    }
+    return acc;
+  }, '');
+};
 
-  const array = message.toLowerCase().split('').reverse();
-
-  const length = array.filter((letter) => alphabet.includes(letter)).length;
-  first += length % size;
-  second += Math.floor(length / size) % size;
-  third += Math.floor(length / size / size) % size;
-
-  return array
-    .reduce((acc, letter) => {
-      const index = alphabet.split('').findIndex((x) => x === letter);
-      if (index === -1) {
-        acc += letter;
-        return acc;
-      }
-
-      const max = size - 1;
-
-      first--;
-
-      if (first < 0) {
-        first = max;
-        second--;
-      }
-
-      if (second < 0) {
-        second = max;
-        third--;
-      }
-
-      if (third < 0) {
-        third = max;
-        first--;
-      }
-
-      const sum = Math.abs((index - 1 - first - second - third) % size);
-      acc += alphabet[sum];
-      return acc;
-    }, '')
-    .split('')
-    .reverse()
-    .join('');
+const round = (value: number, number: number): number => {
+  if (!number) return value;
+  const result = value < 0 ? size - Math.abs(value) : value;
+  return round(result < 0 ? size - Math.abs(result) : result, number - 1);
 };
